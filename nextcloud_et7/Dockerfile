@@ -1,6 +1,7 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest
+ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.19
 FROM $BUILD_FROM
 
+# Install packages
 RUN apk add --no-cache \
     nginx \
     php83 \
@@ -15,31 +16,42 @@ RUN apk add --no-cache \
     php83-dom \
     php83-pdo \
     php83-session \
-    php83-simplexml \
     php83-fileinfo \
-    php83-ctype \
-    php83-openssl \
     php83-iconv \
-    php83-xmlreader \
-    php83-xmlwriter \
     php83-sqlite3 \
-    bash \
+    php83-ctype \
+    openssl \
     curl \
-    openssl
+    bash
 
+# Nextcloud vars
 ENV NEXTCLOUD_DIR=/var/www/nextcloud
 ENV NEXTCLOUD_VERSION=30.0.2
 
+# Download Nextcloud
 RUN mkdir -p ${NEXTCLOUD_DIR} && \
     curl -fsSL https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2 -o /tmp/nextcloud.tar.bz2 && \
     tar -xjf /tmp/nextcloud.tar.bz2 -C /var/www && \
     rm /tmp/nextcloud.tar.bz2
 
+# Data dir
 RUN mkdir -p /share/nextcloud
 
+# Copy startup script
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
-EXPOSE 443
+# -------------------------------
+# Create s6 service for Nextcloud
+# -------------------------------
+RUN mkdir -p /etc/services.d/nextcloud
 
-CMD ["/run.sh"]
+# RUN script for service
+RUN bash -c 'cat << EOF > /etc/services.d/nextcloud/run
+#!/usr/bin/with-contenv bash
+exec /run.sh
+EOF'
+
+RUN chmod +x /etc/services.d/nextcloud/run
+
+# No CMD needed: s6-overlay handles startup
