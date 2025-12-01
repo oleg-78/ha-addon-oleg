@@ -1,7 +1,7 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.19
+ARG BUILD_FROM=ghcr.io/home-assistant/amd64-addon-base:14.1.1
 FROM $BUILD_FROM
 
-# Install packages
+# Install system packages
 RUN apk add --no-cache \
     nginx \
     php83 \
@@ -34,20 +34,19 @@ RUN mkdir -p ${NEXTCLOUD_DIR} && \
     rm /tmp/nextcloud.tar.bz2
 
 # Data directory
-RUN mkdir -p /share/nextcloud
+RUN mkdir -p /data/nextcloud
 
-# Add startup script
+# Copy startup script
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
 # -------------------------------
-# s6-overlay service definition
+# s6 service
 # -------------------------------
-RUN mkdir -p /etc/services.d/nextcloud && \
-    printf "%s\n" \
+RUN mkdir -p /etc/services.d/nextcloud
+
+RUN printf "%s\n" \
     "#!/usr/bin/with-contenv bash" \
     "exec /run.sh" \
-    > /etc/services.d/nextcloud/run && \
-    chmod +x /etc/services.d/nextcloud/run
+    > /etc/services.d/nextcloud/run && chmod +x /etc/services.d/nextcloud/run
 
-# No CMD — s6-overlay handles startup
