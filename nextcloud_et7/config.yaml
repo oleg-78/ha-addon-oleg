@@ -2,7 +2,7 @@ name: "Nextcloud Etalon-7"
 version: "0.1.0"
 slug: "nextcloud_et7"
 description: "Self-hosted Nextcloud server for Home Assistant OS"
-url: "https://github.com/ТВОЙ_ЮЗЕР/ha-addon-oleg"
+url: "https://github.com/oleg-78/ha-addon-oleg"
 arch:
   - amd64
   - aarch64
