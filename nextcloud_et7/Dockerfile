@@ -24,7 +24,6 @@ RUN apk add --no-cache \
     curl \
     bash
 
-# Nextcloud vars
 ENV NEXTCLOUD_DIR=/var/www/nextcloud
 ENV NEXTCLOUD_VERSION=30.0.2
 
@@ -34,24 +33,21 @@ RUN mkdir -p ${NEXTCLOUD_DIR} && \
     tar -xjf /tmp/nextcloud.tar.bz2 -C /var/www && \
     rm /tmp/nextcloud.tar.bz2
 
-# Data dir
+# Data directory
 RUN mkdir -p /share/nextcloud
 
-# Copy startup script
+# Add startup script
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
 # -------------------------------
-# Create s6 service for Nextcloud
+# s6-overlay service definition
 # -------------------------------
-RUN mkdir -p /etc/services.d/nextcloud
+RUN mkdir -p /etc/services.d/nextcloud && \
+    printf "%s\n" \
+    "#!/usr/bin/with-contenv bash" \
+    "exec /run.sh" \
+    > /etc/services.d/nextcloud/run && \
+    chmod +x /etc/services.d/nextcloud/run
 
-# RUN script for service
-RUN bash -c 'cat << EOF > /etc/services.d/nextcloud/run
-#!/usr/bin/with-contenv bash
-exec /run.sh
-EOF'
-
-RUN chmod +x /etc/services.d/nextcloud/run
-
-# No CMD needed: s6-overlay handles startup
+# No CMD — s6-overlay handles startup
